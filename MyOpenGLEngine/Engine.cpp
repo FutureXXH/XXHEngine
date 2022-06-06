@@ -3,6 +3,7 @@
 
 MyEngine* __MyEngine = new MyEngine();
 
+
 bool MyEngine::EngineInit()
 {
 
@@ -24,8 +25,10 @@ void MyEngine::EngineRun()
     int OpenGLState = 1;
     while (true)
     {
-        MyObjectSystem->ObjUpdate();
-        OpenGLState = myOpenGL->OpenGLUpdate();
+        MyWorldManager->WorldUpdate();
+        OpenGLState = myOpenGL->OpenGLUpdate(MyWorldManager);
+
+
         if (OpenGLState == -1)break;
 
     }
@@ -42,16 +45,23 @@ bool MyEngine::AddObject(Object* obj)
     {
         myOpenGL->AddRenderingObj(obj);
     }
-    MyObjectSystem->RegObjectList(obj);
-
+    MyWorldManager->RegObject(obj);
 
     return true;
 }
 
-bool MyEngine::LoadShader(string FilePath, GLenum Type)
+Shader* MyEngine::CreateShader(string ShaderName, const char* vertexPath, const char* fragmentPath)
 {
-    return myOpenGL->LoadShader(FilePath,Type);
+   
+    return  myOpenGL->RegShader(ShaderName,vertexPath,fragmentPath);
 }
+
+Shader* MyEngine::GetShader(string ShaderName)
+{
+    return myOpenGL->GetShader(ShaderName);
+}
+
+
 
 GLuint MyEngine::RegTexture(string TextureName, const char* texImagePath)
 {

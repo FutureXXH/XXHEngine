@@ -71,27 +71,40 @@ bool MyOpenGL::RegModel(string ModelName, string ModelPath)
 	return true;
 }
 
-GLuint MyOpenGL::LoadShader(string FilePath,GLenum Type)
+Shader* MyOpenGL::GetShader(string Name)
 {
-	string temp = readShaderSource(FilePath);
-	const char* shaderSourace = temp.c_str();
-	GLuint Shader = glCreateShader(Type);
-	glShaderSource(Shader, 1, &shaderSourace, NULL);
-
-	glCompileShader(Shader);
-	checkOpenGLError();
-	GLint vertCompiled;
-	glGetShaderiv(Shader, GL_COMPILE_STATUS, &vertCompiled);
-	if (vertCompiled != 1)
+	if (Shaders.count(Name) > 0)
 	{
-		cout << " compilation failed" << endl;
-		printShaderLog(Shader);
-		return -1;
+		return Shaders[Name];
 	}
-	glAttachShader(renderingProgram, Shader);
-	cout << "创建Shader：" << FilePath << "  " << Shader <<endl;
-	return Shader;
+
+	return nullptr;
 }
+
+Shader* MyOpenGL::RegShader(string Name, const char* vertexPath, const char* fragmentPath)
+{
+	if (Shaders.count(Name) > 0)
+	{
+		cout << "Shader :" << Name << "重名" << endl;
+		return nullptr;
+	}
+
+	Shader* newshader = new Shader();
+	if (!newshader->Init(vertexPath, fragmentPath))
+	{
+		cout << "Shader :" << Name << "创建失败" << endl;
+		delete newshader;
+		return nullptr;
+	}
+
+
+	Shaders.emplace(Name, newshader);
+
+
+	return newshader;
+}
+
+
 
 void MyOpenGL::window_reshape_callback(GLFWwindow* window, int newWidth, int newHeight)
 {
@@ -119,7 +132,7 @@ bool MyOpenGL::OpenGLInit(int setwidth, int setheight)
 	glfwSwapInterval(1);
 
 
-	renderingProgram = glCreateProgram();
+	
 
 
 	return true;
@@ -175,7 +188,6 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mod)
 void MyOpenGL::OpenGLRun()
 {
 
-	glLinkProgram(renderingProgram);
 	glfwGetFramebufferSize(window, &width, &height);
 	aspect = (float)width / (float)height;
 	pMat = glm::perspective(1.0472f, aspect, 0.1f, 1000.0f);
@@ -192,19 +204,19 @@ void MyOpenGL::OpenGLRun()
 	return ;
 }
 GLfloat lastFrame = glfwGetTime();
-int MyOpenGL::OpenGLUpdate()
+int MyOpenGL::OpenGLUpdate(WorldManager* MyWorldManager)
 {
 
 	
 	if (!glfwWindowShouldClose(window))
 	{
-		GLfloat deltaTime = glfwGetTime() - lastFrame;
+		MyWorldManager->deltaTime = glfwGetTime() - lastFrame;
 		lastFrame = glfwGetTime();
 
 
 
-		MyCamera.do_movement(deltaTime);
-		DisPlay(window, glfwGetTime());
+		MyCamera.do_movement(MyWorldManager->deltaTime);
+		DisPlay(window, glfwGetTime(),MyWorldManager);
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 		return 1;
@@ -221,16 +233,10 @@ int MyOpenGL::OpenGLUpdate()
 
 
 
-void MyOpenGL::DisPlay(GLFWwindow* window, double currentTime)
+void MyOpenGL::DisPlay(GLFWwindow* window, double currentTime, WorldManager* MyWorldManager)
 {
 	glClear(GL_DEPTH_BUFFER_BIT);
 	glClear(GL_COLOR_BUFFER_BIT);
-	glUseProgram(renderingProgram);
-	
-	mvLoc = glGetUniformLocation(renderingProgram, "mv_matrix");
-	projLoc = glGetUniformLocation(renderingProgram, "proj_matrix");
-	GLuint textureSampleLoc = glGetUniformLocation(renderingProgram, "textureSample");
-	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(pMat));
 	vMat = glm::lookAt(MyCamera.cameraPos, MyCamera.cameraPos + MyCamera.cameraFront, MyCamera.cameraUp);
 	//vMat = glm::translate(glm::mat4(1.0f), glm::vec3(-cameraX, -cameraY, -cameraZ));
 
@@ -241,44 +247,78 @@ void MyOpenGL::DisPlay(GLFWwindow* window, double currentTime)
 		if (CurModel == nullptr)continue;
 
 
+
+
+
+
+		//获取渲染组件
 		auto CurRenderingModel = CurModel->GetComponent<Rendering>();
 		if (CurRenderingModel == nullptr)continue;
 
-
+		//获取模型
 		if (Models.count(CurRenderingModel->ModelName) == 0)continue;
 		auto  Modelp = Models[CurRenderingModel->ModelName];
 
-		if (CurModel == nullptr)continue;
+	    //获取变换组件
 		auto CurModelTransform = CurModel->GetComponent<Transform>();
+		if (CurModelTransform == nullptr)continue;
 
+		//获取shader
+		if (Shaders.count(CurRenderingModel->ShaderName) <= 0)continue;
+		auto CurShader = GetShader(CurRenderingModel->ShaderName);
+
+
+
+
+		CurShader->use();
+
+		if (CurShader->update != nullptr)
+			CurShader->update(CurShader, currentTime, MyWorldManager);
+
+
+	
 
 
 		mMat = glm::translate(glm::mat4(1.0f), glm::vec3(CurModelTransform->PosX, CurModelTransform->PosY, CurModelTransform->PosZ));
 
 		//mMat *= glm::translate(glm::mat4(1.0f), glm::vec3(sin((float)currentTime) * 5.0,0.0 , cos((float)currentTime) * 5.0));
-		mMat *= glm::rotate(glm::mat4(1.0f), (float)currentTime, glm::vec3(1.0, 0.0, 0.0));
-		mvMat = vMat * mMat;
-		glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvMat));
+		//mMat *= glm::rotate(glm::mat4(1.0f), (float)currentTime, glm::vec3(1.0, 0.0, 0.0));
 
+
+
+
+
+
+		CurShader->SetMatrix4fv("m_matrix", mMat);
+		CurShader->SetMatrix4fv("v_matrix", vMat);
+		CurShader->SetMatrix4fv("proj_matrix", pMat);
+		CurShader->SetVec3("viewPos", MyCamera.cameraPos.x, MyCamera.cameraPos.y, MyCamera.cameraPos.z);
 
 		glBindBuffer(GL_ARRAY_BUFFER, Modelp->vbo[0]);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
 		glEnableVertexAttribArray(0);
 
 		glBindBuffer(GL_ARRAY_BUFFER, Modelp->vbo[1]);
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
 		glEnableVertexAttribArray(1);
+
+		glBindBuffer(GL_ARRAY_BUFFER, Modelp->vbo[2]);
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+		glEnableVertexAttribArray(2);
 		
 		if (Textures.count(CurRenderingModel->TextureName) > 0)
 		{
-			glUniform1i(textureSampleLoc, 1);
+			glUniform1i(glGetUniformLocation(CurShader->ID, "textureSample"), 1);
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, Textures[CurRenderingModel->TextureName]);
 		}
 		else
 		{
-			glUniform1i(textureSampleLoc, 0);
+			glUniform1i(glGetUniformLocation(CurShader->ID, "textureSample"), 0);
 		}
+
+		glEnable(GL_CULL_FACE);
+		glFrontFace(GL_CCW);
 
 		glEnable(GL_DEPTH_TEST);
 
@@ -300,67 +340,6 @@ void MyOpenGL::DisPlay(GLFWwindow* window, double currentTime)
 
 }
 
-void MyOpenGL::printShaderLog(GLuint shader)
-{
-	int len = 0;
-	int chWrittn = 0;
-	char* log;
-	glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &len);
-	if (len > 0)
-	{
-		log = new char[len];
-		glGetShaderInfoLog(shader, len, &chWrittn, log);
-		cout << shader << " Shader Info Log : " << log << endl;
-		delete[]log;
-	}
-}
-
-
-void MyOpenGL::printProgramLog(int Prog)
-{
-
-
-	int len = 0;
-	int chWrittn = 0;
-	char* log;
-	glGetShaderiv(Prog, GL_INFO_LOG_LENGTH, &len);
-	if (len > 0)
-	{
-		log = new char[len];
-		glGetShaderInfoLog(Prog, len, &chWrittn, log);
-		cout << " Program Info Log : " << log << endl;
-		delete[]log;
-	}
-}
-
-bool  MyOpenGL::checkOpenGLError()
-{
-	bool foundError = false;
-	int glErr = glGetError();
-	while (glErr != GL_NO_ERROR)
-	{
-		cout << "gl ERROR:" << glErr << endl;
-		foundError = true;
-		glErr = glGetError();
-	}
-	return foundError;
-}
-
-
-string  MyOpenGL::readShaderSource(string filePath)
-{
-	string content = "";
-	ifstream fileStream(filePath.c_str(), ios::in);
-	string line = "";
-	while (!fileStream.eof())
-	{
-		getline(fileStream, line);
-		content += (line + "\n");
-	}
-	fileStream.close();
-	
-	return content;
-}
 
 bool MyOpenGL::AddRenderingObj(Object* obj)
 {
@@ -395,7 +374,7 @@ void Camera::do_movement(GLfloat deltaTime)
 {
 
 		// 摄像机控制
-	GLfloat cameraSpeed = 5.0f * deltaTime;
+	GLfloat cameraSpeed = 10.0f * deltaTime;
 		if (keys[GLFW_KEY_W])
 			cameraPos += cameraSpeed * cameraFront;
 		if (keys[GLFW_KEY_S])

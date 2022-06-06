@@ -14,9 +14,8 @@
 #include <glm\glm.hpp>
 #include <vector>
 #include <unordered_map>
-#include "ObjectSystem.h"
-
-
+#include "Shader.h"
+#include "WorldManager.h"
 using namespace std;
 class ModelImporter;
 
@@ -60,11 +59,13 @@ public:
 
 
 
+
 class Rendering :public ComponentBase
 {
 public:
 	string ModelName;
 	string TextureName;
+	string ShaderName;
 
 };
 
@@ -76,7 +77,7 @@ class Model
 {
 private:
 	int NumVertices = 0;
-
+	
 public:
 	
 	bool ImportModel(string ObjFilePath);
@@ -103,7 +104,7 @@ public:
 	bool Mouse_Right_Down = false;
 	bool firstMouse = true;
 	void do_movement(GLfloat deltaTime);
-	void key_callback(int key, int action);
+	void key_callback(int key, int action); 
 	void mouse_callback(GLfloat xpos, GLfloat ypos);
 
 };
@@ -116,7 +117,7 @@ class MyOpenGL
 {
 private:
 
-	GLuint renderingProgram;
+
 	GLFWwindow* window;
 	float aspect;
 	glm::mat4 pMat, vMat, mMat, mvMat, tMat, rMat;
@@ -125,33 +126,31 @@ private:
 
 	float cameraX = 0, cameraY =0, cameraZ = 10;
 
-
+	
 	vector< Object*> RenderObjs;
 
 	unordered_map<string,Model*> Models;
 	unordered_map<string,GLuint> Textures;
+	unordered_map<string, Shader*> Shaders;
 
 	GLuint DefaultTexture;
 
 
 
-	void printShaderLog(GLuint shader);
-
-	void printProgramLog(int Prog);
-
-	bool checkOpenGLError();
-
-	string readShaderSource(string filePath);
-
 public:
+	
 
+
+	//添加需要渲染的对象
 	bool AddRenderingObj(Object* obj);
 
 	
 
 	bool RegModel(string ModelName,string ModelPath);
 
-	GLuint LoadShader(string FilePath, GLenum Type);
+	Shader* GetShader(string Name);
+
+	Shader* RegShader(string Name, const char* vertexPath, const char* fragmentPath);
 
 	GLuint RegTexture(string TextureName, const char* texImagePath);
 
@@ -161,9 +160,9 @@ public:
 
 	void OpenGLRun();
 
-	int OpenGLUpdate();
+	int OpenGLUpdate(WorldManager* MyWorldManager);
 
-	void DisPlay(GLFWwindow* window, double currentTime);
+	void DisPlay(GLFWwindow* window, double currentTime, WorldManager* MyWorldManager);
 
 
 	

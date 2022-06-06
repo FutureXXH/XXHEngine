@@ -1,16 +1,65 @@
 #ifndef __OBJECTSYSTEM_H
 #define __OBJECTSYSTEM_H
 
-#include "ComponentSystem.h"
+#include <vector>
+#include <string>
 
-class ObjectSystem;
+
+using namespace std;
+#define CP_INIT 1
+#define CP_ACTIVE 2
+class WorldManager;
+class Object;
+
+class ComponentBase
+{
+
+public:
+	short State = CP_INIT;
+	virtual void Init(WorldManager* MyWorldManager, Object* MyObject) {};
+	virtual void Update(WorldManager* MyWorldManager, Object* MyObject) {};
+
+
+
+
+};
+
+class Script : public ComponentBase
+{
+public:
+	void (*UpdateFun)(WorldManager* MyWorldManager, Object* MyObject);
+	virtual void Update(WorldManager* MyWorldManager, Object* MyObject);
+
+	void (*InitFun)(WorldManager* MyWorldManager, Object* MyObject);
+	virtual void Init(WorldManager* MyWorldManager, Object* MyObject);
+};
+
+
+
+class Transform :public ComponentBase
+{
+public:
+	float PosX = 0, PosY = 0, PosZ = 0;
+
+
+};
+
+
+//===================================================
+
+
+
+
+
+
 
 
 class Object
 {
-	
+private:
+
 	vector<ComponentBase*> Components;
-	friend class ObjectSystem;
+	friend class WorldManager;
 public:
 
 	string name;
@@ -21,26 +70,6 @@ public:
 
 
 };
-
-class ObjectSystem
-{
-private:
-	vector<Object*> ObjectList;
-
-public:
-	bool RegObjectList(Object* obj);
-
-	void ObjUpdate();
-
-
-
-};
-
-
-
-
-
-
 
 
 
