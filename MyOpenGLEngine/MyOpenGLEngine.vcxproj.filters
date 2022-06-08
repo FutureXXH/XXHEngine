@@ -1,0 +1,86 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="Component.cpp">
+      <Filter>Res</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine.cpp">
+      <Filter>Res</Filter>
+    </ClCompile>
+    <ClCompile Include="ImportedModel.cpp">
+      <Filter>Res</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Res</Filter>
+    </ClCompile>
+    <ClCompile Include="MyOpenGL.cpp">
+      <Filter>Res</Filter>
+    </ClCompile>
+    <ClCompile Include="ObjectSystem.cpp">
+      <Filter>Res</Filter>
+    </ClCompile>
+    <ClCompile Include="Test.cpp">
+      <Filter>Res</Filter>
+    </ClCompile>
+    <ClCompile Include="Shader.cpp">
+      <Filter>Res</Filter>
+    </ClCompile>
+    <ClCompile Include="WorldManager.cpp">
+      <Filter>Res</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Engine.h">
+      <Filter>Head</Filter>
+    </ClInclude>
+    <ClInclude Include="MyOpenGL.h">
+      <Filter>Head</Filter>
+    </ClInclude>
+    <ClInclude Include="ObjectSystem.h">
+      <Filter>Head</Filter>
+    </ClInclude>
+    <ClInclude Include="Shader.h">
+      <Filter>Head</Filter>
+    </ClInclude>
+    <ClInclude Include="WorldManager.h">
+      <Filter>Head</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="glsl\fragShader.glsl">
+      <Filter>glsl</Filter>
+    </None>
+    <None Include="glsl\vertShader.glsl">
+      <Filter>glsl</Filter>
+    </None>
+    <None Include="glsl\light.glsl">
+      <Filter>glsl</Filter>
+    </None>
+    <None Include="glsl\vert_shadow_mapping.glsl">
+      <Filter>glsl</Filter>
+    </None>
+    <None Include="glsl\frag_shadow_mapping.glsl">
+      <Filter>glsl</Filter>
+    </None>
+    <None Include="glsl\geometry_shadow_mapping.glsl">
+      <Filter>glsl</Filter>
+    </None>
+    <None Include="glsl\FragSkyBox.glsl">
+      <Filter>glsl</Filter>
+    </None>
+    <None Include="glsl\VertSkyBox.glsl">
+      <Filter>glsl</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Head">
+      <UniqueIdentifier>{ddd1d524-bf09-445f-b536-fd86396eaebb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Res">
+      <UniqueIdentifier>{66c0a54a-a4aa-43ae-90d2-8a275e681e21}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="glsl">
+      <UniqueIdentifier>{2d937d88-5788-4bbf-a2a6-1eadaa6dd6cd}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
