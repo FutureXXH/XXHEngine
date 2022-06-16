@@ -1,9 +1,7 @@
 # XXHEngine
-个人制作引擎计划
+OpenGL边学边做计划
 
-边学边做
 
-进度(5%)
 
 
 ![QQ截图20220608214932](https://user-images.githubusercontent.com/60800578/172637350-8c43c24c-11a4-4251-a6fd-20e1bed86e3e.png)
